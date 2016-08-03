@@ -23,21 +23,25 @@ This is where the magic happens. Fail2ban uses a custom filter to monitor the /v
   - findtime:   The scrolling window of time within which <maxretries> actions must occur. Default: 60 seconds.
   - bantime:    The amount of time that will pass before the unbanaction will occur. Default: 30 seconds.
 
-- Action: /etc/fail2ban/action.d/samba-disableuser.conf
-- Script: /etc/fail2ban/script/samba-disableuser.sh
+- Action: /etc/fail2ban/action.d/samba-denyuser.conf
+- Script: /etc/fail2ban/script/samba-denyuser.sh
 
 ## How to use
 1. Clone the repo, and cd into the repo folder.
 2. Edit the 'continer.sh' file to suit your needs.
-  - Change 'EXTIFACE' to your bridge interface.
   - Change 'HOSTDATA' to the folder to be shared via Samba.
+  - Chance 'EXTIFACE' to the docker network you want to publish this container to.
 3. Change the default users and passwords in the Dockerfile
   - Edit/Clone the 'smbadmin' line for users that will have write access.
   - Edit/Clone the 'smbmedia' line for users that will never have write access.
 4. Edit your shares in files/smb.conf
+  - NOTE: The line containing 'invalid users = {{ invalid users }}' must be present on all shares that you want protected.
 5. Build the container image with './container.sh build'.
 6. Run the container with './container.sh run'.
 7. Connect to the container's IP via UNC or SMB://, and enter the credentials you entered into the Dockerfile.
 
 ## Caveats
 This has only been tested (and is only currently configured to work) with a local user database, but the framework is there to test with a back-end LDAP store.
+
+## Note about deny/disable
+As of version 0.0.2, the method for blocking a user was changed to be declared in the smb.conf file as an 'invalid user'. This blocks all permissions for banned users. Previously, this was facilitated through the full disablement of the user's account via 'smbpasswd -d'. The actions to disable instead of deny are still present in the current version. This change facilitates easier integration into a backend authentication store, while providing the same effect.
