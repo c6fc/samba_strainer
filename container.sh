@@ -1,17 +1,9 @@
 #! /bin/bash
 
-# The name to use for the images, container, and to calculate a unique MAC from.
 NAME="samba_strainer"
-
-# Where the host data will be mounted in the container. Don't change this.
 CONTAINERDATA="/samba"
-
-# The host folder to distrubute via Samba_Strainer.
 HOSTDATA="/storage/test"
-
-# Which interface to bridge on. You probably want to change this.
-EXTIFACE="br10"
-
+EXTIFACE="vlan10"
 
 if [ $# != 1 ]; then
    echo "Syntax: $0 <build | del | run>\n"
@@ -29,10 +21,8 @@ function del {
 
 function run {
    docker ps -a | grep $NAME | awk ' { system("docker stop " $1 "; docker rm " $1) } '
-   CID=`docker run -dit --net none -v $HOSTDATA:$CONTAINERDATA --name $NAME $NAME /root/start.sh`
-
-   # Use pipework by default.
-   sudo pipework $EXTIFACE $CID dhclient-f U:$NAME
+   CID=`docker run -dit --net $EXTIFACE -p 139:139 -p 445:445 -v $HOSTDATA:$CONTAINERDATA --name $NAME $NAME /root/start.sh`
+#   sudo pipework $EXTIFACE $CID dhclient-f U:$NAME
 }
 
 function connect {
